@@ -1,44 +1,73 @@
+<div align="center">
+
 # fairsharing-cli
 
-`fairsharing-cli` is a production-focused Python command-line wrapper for the full FAIRsharing REST API surface.
+[![Release](https://img.shields.io/github/v/release/decent-tools-for-thought/fairsharing-cli?sort=semver&color=0f766e)](https://github.com/decent-tools-for-thought/fairsharing-cli/releases)
+![Python](https://img.shields.io/badge/python-3.11%2B-0ea5e9)
+![License](https://img.shields.io/badge/license-MIT-14b8a6)
+
+Command-line wrapper for the FAIRsharing REST API, with record browsing, search, auth-aware operations, exports, and batch workflows.
+
+</div>
+
+> [!IMPORTANT]
+> This codebase is entirely AI-generated. It is useful to me, I hope it might be useful to others, and issues and contributions are welcome.
+
+## Map
+- [Install](#install)
+- [Functionality](#functionality)
+- [Configuration](#configuration)
+- [Quick Start](#quick-start)
+- [Credits](#credits)
 
 ## Install
-
-From this repository:
+$$\color{#0EA5E9}Install \space \color{#14B8A6}Tool$$
 
 ```bash
 python -m pip install .
+fairsharing --help
 ```
 
-or for development:
+For local development:
 
 ```bash
 python -m pip install -e ".[dev]"
+pytest
 ```
 
-## API Coverage
+## Functionality
+$$\color{#0EA5E9}Record \space \color{#14B8A6}Browse$$
+- `fairsharing fairsharing-records` and `fairsharing fairsharing-record`: list and fetch FAIRsharing records.
+- `fairsharing subjects|domains|taxonomies|licences|organisations|standards|policies|databases|collections`: browse named API families.
+- `fairsharing routes`: inspect published API routes.
 
-This CLI wraps all endpoints currently listed in the FAIRsharing OpenAPI document at `https://api.fairsharing.org/openapi.json`:
+$$\color{#0EA5E9}Search \space \color{#14B8A6}Workflows$$
+- `fairsharing search ...`: run family-specific search commands.
+- `fairsharing records resolve`: resolve FAIRsharing IDs, DOIs, and legacy identifiers.
+- `fairsharing records search-expand`: search and expand matching records to fuller payloads.
+- `fairsharing list-all`: unified list entrypoint across families.
 
-- `GET /routes`
-- `GET/POST/GET/PUT/DELETE` for `fairsharing_records`
-- `GET` for `fairsharing_record/{doi}` and `fairsharing_record/{legacy_id}`
-- `GET` families: `subjects`, `domains`, `taxonomies`, `licences`, `organisations`, `standards`, `policies`, `databases`, `collections`
-- `GET/POST/GET/PUT/DELETE` families: `user_defined_tags`, `organisation_links`, `grants`
-- Search endpoints under `/search/*` (all 10)
-- User/session flows under `/users/*`
-- Admin flows under `/user_admin` and `/user_admin/{id}`
-- `POST /maintenance_requests`
+$$\color{#0EA5E9}Auth \space \color{#14B8A6}Operations$$
+- `fairsharing auth login|whoami|logout`: manage JWT-backed sessions.
+- `fairsharing users` and `fairsharing user-admin`: access user and admin endpoints.
+- `fairsharing config show|set|clear`: manage saved API defaults.
 
-## Authentication and Config
+$$\color{#0EA5E9}Export \space \color{#14B8A6}Batch$$
+- `fairsharing export search|records`: export searches and record sets to structured files.
+- `fairsharing maintain request`: submit maintenance shortcuts.
+- `fairsharing batch --file ops.jsonl`: run batched API operations from JSONL.
+- `fairsharing docs routes|endpoint` and `fairsharing api-call`: inspect or call the API directly.
 
-FAIRsharing API uses JWT bearer authentication for most endpoints.
+## Configuration
+$$\color{#0EA5E9}Save \space \color{#14B8A6}Defaults$$
 
-Credential/token resolution precedence (highest first):
+FAIRsharing uses JWT bearer authentication for most protected endpoints.
 
-1. CLI flags (`--token`, `--email`, `--password`)
-2. Environment (`FAIRSHARING_TOKEN`, `FAIRSHARING_EMAIL`, `FAIRSHARING_PASSWORD`)
-3. Config file (`$XDG_CONFIG_HOME/fairsharing-cli/config.json` or `~/.config/fairsharing-cli/config.json`)
+Credential precedence:
+
+1. CLI flags: `--token`, `--email`, `--password`
+2. Environment: `FAIRSHARING_TOKEN`, `FAIRSHARING_EMAIL`, `FAIRSHARING_PASSWORD`
+3. Config file: `$XDG_CONFIG_HOME/fairsharing-cli/config.json` or `~/.config/fairsharing-cli/config.json`
 
 Base URL precedence:
 
@@ -57,138 +86,21 @@ fairsharing config clear --token
 ```
 
 ## Quick Start
+$$\color{#0EA5E9}Try \space \color{#14B8A6}Lookup$$
 
 ```bash
-# show top-level help
-fairsharing --help
-
-# inspect API routes
 fairsharing routes
-
-# login and save token
 fairsharing auth login --login user@example.org --password '***' --save-token
-
-# list records with pagination
 fairsharing fairsharing-records list --page-number 1 --page-size 20
-
-# lookup standard by id
 fairsharing standards get --id FAIRsharing.v0z5x1
-
-# search organisations
 fairsharing search organisations --q "EMBL"
-
-# resolve unknown identifier
 fairsharing records resolve 10.25504/FAIRsharing.abc123
-
-# export search hits to jsonl
 fairsharing export search --family organisations --q EMBL --format jsonl --out orgs.jsonl
-```
-
-## Output Modes
-
-- `--output json` (default): full fidelity JSON
-- `--output text`: concise, readable summaries
-- `--output jsonl`: JSON lines for list-like responses
-
-Additional controls:
-
-- `--select key1,key2`: select top-level fields from object/list items
-- `--raw`: print raw response payload without normalization
-
-## Command Surface
-
-Top-level groups:
-
-- `routes`
-- `fairsharing-records`
-- `fairsharing-record`
-- `subjects`
-- `domains`
-- `taxonomies`
-- `user-defined-tags`
-- `organisation-links`
-- `grants`
-- `licences`
-- `organisations`
-- `standards`
-- `policies`
-- `databases`
-- `collections`
-- `search`
-- `users`
-- `user-admin`
-- `maintenance-requests`
-- `config`
-- `docs`
-- `api-call`
-- `auth`
-- `records`
-- `list-all`
-- `export`
-- `maintain`
-- `batch`
-
-Each group supports complete endpoint-level operations for its API family.
-
-## Higher-Order Commands
-
-These commands provide ergonomic workflows on top of endpoint wrappers:
-
-```bash
-# identity/auth workflows
-fairsharing auth login --login user@example.org --password '***' --save-token
-fairsharing auth whoami
-fairsharing auth logout --revoke --clear-token
-
-# resolve by DOI/legacy/id
-fairsharing records resolve FAIRsharing.v0z5x1 --typed-family standards
-
-# search and expand fairsharing records to full payloads
-fairsharing records search-expand --q "metabolomics" --limit 20 --concurrency 4
-
-# unified list entrypoint
-fairsharing list-all --family standards --type minimal_reporting_guideline
-
-# export workflows
-fairsharing export search --family organisations --q EMBL --out organisations.jsonl --format jsonl
-fairsharing export records --ids 1,2,3 --out records.json --format json
-
-# maintenance shortcut
-fairsharing maintain request --record 123 --status approved
-
-# OpenAPI introspection
-fairsharing docs routes
-fairsharing docs endpoint --method GET --path /fairsharing_records
-
-# batch operation execution
 fairsharing batch --file ops.jsonl
 ```
 
-Batch input format (`ops.jsonl`):
+## Credits
 
-```json
-{"method":"GET","path":"/routes"}
-{"method":"POST","path":"/search/organisations/","params":{"q":"EMBL"}}
-{"method":"GET","path":"/fairsharing_records/1"}
-```
+This client is built for the FAIRsharing API and is not affiliated with FAIRsharing.
 
-## Verification
-
-```bash
-python -m pip install -e .
-pytest
-python -m fairsharing_cli --help
-fairsharing routes --output text
-```
-
-## Caveats
-
-- API docs page (`https://fairsharing.org/API_doc`) is JavaScript-rendered; this CLI uses the machine-readable OpenAPI at `https://api.fairsharing.org/openapi.json`.
-- Some upstream endpoints are thin wrappers around Devise-like auth pages and may return minimal payloads.
-
-## Attribution
-
-This tool wraps the FAIRsharing API. FAIRsharing content and API are provided by FAIRsharing and subject to their terms:
-
-- Terms: `https://fairsharing.org/terms`
-- API docs: `https://fairsharing.org/API_doc`
+Credit goes to FAIRsharing for the registry content, API, and documentation this tool depends on.
